@@ -19,20 +19,18 @@ async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ydl_opts = {
         'format': 'mp4',
         'outtmpl': 'video.%(ext)s',
-        'quiet': True,
-        'no_warnings': True,
     }
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             filename = ydl.prepare_filename(info)
-
+        
         await msg.edit_text("دانلود تموم شد، دارم ارسال می‌کنم...")
 
         with open(filename, 'rb') as video:
             await update.message.reply_video(video)
-
+        
         os.remove(filename)
 
     except Exception as e:
@@ -44,8 +42,11 @@ async def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("download", download))
 
+    # به جای asyncio.run، مستقیم run_polling صدا زده می‌شود
     await app.run_polling()
 
 if __name__ == '__main__':
     import asyncio
-    asyncio.run(main())
+    # حذف asyncio.run و جایگزینی با اجرای مستقیم main در event loop فعلی:
+    asyncio.get_event_loop().create_task(main())
+    asyncio.get_event_loop().run_forever()
