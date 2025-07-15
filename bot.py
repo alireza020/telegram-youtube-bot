@@ -1,61 +1,49 @@
-import os
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
-# سایر ایمپورت‌ها
+import yt_dlp
+import os
 
-# مسیر ffmpeg
-FFMPEG_PATH = os.path.join(
-    os.getcwd(),
-    "TelegramYTDownloader",
-    "ffmpeg",
-    "ffmpeg-7.1.1-essentials_build",
-    "bin",
-    "ffmpeg.exe"
-)
-
-
-TOKEN = os.getenv("TOKEN")  ("7854509170:AAFXw_iKAm1F0U1fM4GGfFYJQ-P4DMDdngs")
+TOKEN = "7996761666:AAESN7ometeIUPulPwZ4RIuKKJENx6SShks"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("سلام! لینک یوتیوب رو بفرست تا صدای MP3 برات بفرستم.")
+    await update.message.reply_text("سلام! لینک یوتیوب بفرست تا ویدیو mp4 دانلود و برات بفرستم.")
 
-async def download_mp3(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    url = update.message.text
-    await update.message.reply_text("در حال دانلود صدا از یوتیوب...")
+async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    url = ' '.join(context.args)
+    if not url:
+        await update.message.reply_text("لطفا لینک ویدیو رو بعد از /download بفرست.")
+        return
+
+    msg = await update.message.reply_text("در حال دانلود ویدیو...")
+
+    ydl_opts = {
+        'format': 'mp4',
+        'outtmpl': 'video.%(ext)s',
+    }
 
     try:
-        output_dir = "downloads"
-        os.makedirs(output_dir, exist_ok=True)
-
-        ydl_opts = {
-            'format': 'bestaudio/best',
-            'outtmpl': f'{output_dir}/%(title).30s.%(ext)s',
-            'noplaylist': True,
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-                'preferredquality': '192',
-            }]
-        }
-
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
-            filename = ydl.prepare_filename(info).rsplit('.', 1)[0] + ".mp3"
+            filename = ydl.prepare_filename(info)
+        
+        await msg.edit_text("دانلود تموم شد، دارم ارسال می‌کنم...")
 
-        with open(filename, 'rb') as audio:
-            await context.bot.send_audio(chat_id=update.effective_chat.id, audio=audio, title=info.get("title", "Audio"))
-
-        os.remove(filename)
+        with open(filename, 'rb') as video:
+            await update.message.reply_video(video)
+        
+        os.remove(filename)  # فایل دانلود شده رو پاک می‌کنیم
 
     except Exception as e:
-        await update.message.reply_text(f"❌ خطا: {e}")
+        await msg.edit_text(f"مشکل پیش اومد: {e}")
 
 async def main():
     app = ApplicationBuilder().token(TOKEN).build()
+
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, download_mp3))
+    app.add_handler(CommandHandler("download", download))
+
     await app.run_polling()
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     import asyncio
     asyncio.run(main())
