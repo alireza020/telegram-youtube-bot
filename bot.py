@@ -3,14 +3,14 @@ import yt_dlp
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
-TOKEN = "7854509170:AAFXw_iKAm1F0U1fM4GGfFYJQ-P4DMDdngs"
+TOKEN = os.environ.get("TOKEN") or "7854509170:AAFXw_iKAm1F0U1fM4GGfFYJQ-P4DMDdngs"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("سلام! لینک یوتیوب رو بفرست تا صداش رو MP3  اشغال کنم و بفرستم.")
+    await update.message.reply_text("سلام اشغال! لینک یوتیوب رو بفرست تا فایل MP3 برات بفرستم.")
 
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def download_mp3(update: Update, context: ContextTypes.DEFAULT_TYPE):
     url = update.message.text
-    await update.message.reply_text("در حال دانلود برای تو لاشی و تبدیل به MP3...")
+    await update.message.reply_text("در حال دانلود صدا از یوتیوب...")
 
     try:
         output_dir = "downloads"
@@ -29,7 +29,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
-            filename = ydl.prepare_filename(info).rsplit('.', 1)[0] + '.mp3'
+            filename = ydl.prepare_filename(info).rsplit('.', 1)[0] + ".mp3"
 
         with open(filename, 'rb') as audio:
             await context.bot.send_audio(chat_id=update.effective_chat.id, audio=audio, title=info.get("title", "Audio"))
@@ -37,13 +37,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         os.remove(filename)
 
     except Exception as e:
-        await update.message.reply_text(f"تف توش خطا در دانلود: {e}")
+        await update.message.reply_text(f"خطا در دانلود: {e}")
 
-def main():
+async def main():
     app = ApplicationBuilder().token(TOKEN).build()
+
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    app.run_polling()
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, download_mp3))
+
+    print("✅ ربات راه‌اندازی شد.")
+    await app.run_polling()
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    asyncio.run(main())
