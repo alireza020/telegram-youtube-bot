@@ -2,6 +2,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 import yt_dlp
 import os
+import asyncio
 
 TOKEN = "7996761666:AAESN7ometeIUPulPwZ4RIuKKJENx6SShks"
 
@@ -42,11 +43,10 @@ async def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("download", download))
 
-    # به جای asyncio.run، مستقیم run_polling صدا زده می‌شود
     await app.run_polling()
 
 if __name__ == '__main__':
-    import asyncio
-    # حذف asyncio.run و جایگزینی با اجرای مستقیم main در event loop فعلی:
-    asyncio.get_event_loop().create_task(main())
-    asyncio.get_event_loop().run_forever()
+    # به جای asyncio.run، این رو بگذار:
+    loop = asyncio.get_event_loop()
+    loop.create_task(main())
+    loop.run_forever()
