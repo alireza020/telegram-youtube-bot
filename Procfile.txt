@@ -1,5 +1,1 @@
-git init
-git remote add origin https://github.com/alireza020/telegram-ytdlp-bot.git
-git add .
-git commit -m "اولین نسخه ربات تلگرام"
-git push -u origin master
+worker: python bot.py
