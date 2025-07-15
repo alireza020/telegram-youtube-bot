@@ -1,9 +1,20 @@
 import os
-import yt_dlp
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+# سایر ایمپورت‌ها
 
-TOKEN = os.getenv("TOKEN")  # یا می‌تونی مستقیماً مقدار توکن رو اینجا بذاری
+# مسیر ffmpeg
+FFMPEG_PATH = os.path.join(
+    os.getcwd(),
+    "TelegramYTDownloader",
+    "ffmpeg",
+    "ffmpeg-7.1.1-essentials_build",
+    "bin",
+    "ffmpeg.exe"
+)
+
+
+TOKEN = os.getenv("TOKEN")  ("7854509170:AAFXw_iKAm1F0U1fM4GGfFYJQ-P4DMDdngs")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("سلام! لینک یوتیوب رو بفرست تا صدای MP3 برات بفرستم.")
